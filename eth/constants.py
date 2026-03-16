@@ -22,12 +22,16 @@ UINT_255_MAX = 2**255 - 1
 UINT_255_CEILING = 2**255
 UINT_255_NEGATIVE_ONE = -1 + UINT_256_CEILING
 UINT_64_MAX = 2**64 - 1
+UINT_8_MAX = 2**8 - 1
 NULL_BYTE = b"\x00"
 EMPTY_WORD = NULL_BYTE * 32
 
 UINT_160_CEILING = 2**160
 
 CREATE_CONTRACT_ADDRESS = Address(b"")
+SYSTEM_ADDRESS = Address(
+    b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe"
+)
 ZERO_ADDRESS = Address(20 * b"\x00")
 ZERO_HASH32 = Hash32(32 * b"\x00")
 
@@ -86,7 +90,6 @@ GAS_CODEDEPOSIT = 200
 
 GAS_MEMORY_QUADRATIC_DENOMINATOR = 512
 
-
 #
 # Pre-compile contract gas costs
 #
@@ -118,6 +121,8 @@ GAS_LIMIT_MAXIMUM = 2**63 - 1
 
 GAS_LIMIT_USAGE_ADJUSTMENT_NUMERATOR = 3
 GAS_LIMIT_USAGE_ADJUSTMENT_DENOMINATOR = 2
+
+SYSTEM_MESSAGE_GAS = 30_000_000
 
 
 #
@@ -180,13 +185,16 @@ GENESIS_BLOOM = 0
 GENESIS_GAS_USED = 0
 
 #
-# Sha3 Keccak
+# Empty hashes
 #
 EMPTY_SHA3 = Hash32(
     b"\xc5\xd2F\x01\x86\xf7#<\x92~}\xb2\xdc\xc7\x03\xc0\xe5\x00\xb6S\xca\x82';\x7b\xfa\xd8\x04]\x85\xa4p"  # noqa: E501
 )
 BLANK_ROOT_HASH = Hash32(
     b"V\xe8\x1f\x17\x1b\xccU\xa6\xff\x83E\xe6\x92\xc0\xf8n\x5bH\xe0\x1b\x99l\xad\xc0\x01b/\xb5\xe3c\xb4!"  # noqa: E501
+)
+EMPTY_SHA256 = Hash32(
+    b"\xe3\xb0\xc4B\x98\xfc\x1c\x14\x9a\xfb\xf4\xc8\x99o\xb9$'\xaeA\xe4d\x9b\x93L\xa4\x95\x99\x1bxR\xb8U"  # noqa: E501
 )
 
 

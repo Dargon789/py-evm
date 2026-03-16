@@ -25,6 +25,9 @@ class Forks(enum.Enum):
     ArrowGlacier = "ArrowGlacier"
     GrayGlacier = "GrayGlacier"
     Paris = "Paris"
+    Shanghai = "Shanghai"
+    Cancun = "Cancun"
+    Prague = "Prague"
 
 
 class CustomFrontierVM(FrontierVM):
@@ -37,7 +40,7 @@ class CustomFrontierVM(FrontierVM):
         (
             (),
             {},
-            ((0, Forks.Paris),),
+            ((0, Forks.Prague),),
         ),
         (
             ((0, "tangerine-whistle"), (1, "spurious-dragon")),
@@ -150,6 +153,9 @@ class CustomFrontierVM(FrontierVM):
                 (10, "arrow-glacier"),
                 (11, "gray-glacier"),
                 (12, "paris"),
+                (13, "shanghai"),
+                (14, "cancun"),
+                (15, "prague"),
             ),
             {},
             (
@@ -165,6 +171,9 @@ class CustomFrontierVM(FrontierVM):
                 (10, Forks.ArrowGlacier),
                 (11, Forks.GrayGlacier),
                 (12, Forks.Paris),
+                (13, Forks.Shanghai),
+                (14, Forks.Cancun),
+                (15, Forks.Prague),
             ),
         ),
     ),

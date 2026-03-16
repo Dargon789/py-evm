@@ -1,7 +1,85 @@
 Release Notes
 =============
 
+.. warning::
+
+   Py-EVM has been archived, and is now read-only. The last supported fork is Prague.
+
 .. towncrier release notes start
+
+py-evm v0.12.1-beta.1 (2025-05-14)
+----------------------------------
+
+Features
+~~~~~~~~
+
+- Add ``PRAGUE_MAINNET_BLOCK`` now that it is known, post Prague activation on mainnet. (`#2213 <https://github.com/ethereum/py-evm/issues/2213>`__)
+
+
+py-evm v0.12.0-beta.3 (2025-04-25)
+----------------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Handle the case where the parent header of a Prague header does not have the ``excess_blob_gas`` property for calculation. (`#2212 <https://github.com/ethereum/py-evm/issues/2212>`__)
+
+
+Features
+~~~~~~~~
+
+- Add Shanghai mainnet block number to mainnet constants. (`#2126 <https://github.com/ethereum/py-evm/issues/2126>`__)
+- Add Cancun mainnet block number to mainnet constants. (`#2212 <https://github.com/ethereum/py-evm/issues/2212>`__)
+
+
+py-evm v0.12.0-beta.2 (2025-04-23)
+----------------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Use correct fields in ``PragueUnsignedLegacyTransaction.as_signed_transaction()``. (`#2209 <https://github.com/ethereum/py-evm/issues/2209>`__)
+- Rename ``new_signed_set_code_transaction()`` -> ``new_set_code_transaction()`` and make sure this returns a ``PragueTypedTransaction``, as is expected. It can also take dictionary auth lists, as was recently added to ``new_unsigned_set_code_transaction()``. (`#2211 <https://github.com/ethereum/py-evm/issues/2211>`__)
+
+
+Features
+~~~~~~~~
+
+- Allow authorizations to be dicts when creating a new ``UnsignedSetCodeTransaction`` via ``PragueTransactionBuilder.new_unsigned_set_code_transaction()``. (`#2210 <https://github.com/ethereum/py-evm/issues/2210>`__)
+
+
+Internal Changes - For py-evm Contributors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Test blockchain tests against latest EELS ``v4.3.0`` develop fixtures. (`#2210 <https://github.com/ethereum/py-evm/issues/2210>`__)
+
+
+py-evm v0.12.0-beta.1 (2025-04-21)
+----------------------------------
+
+Features
+~~~~~~~~
+
+- Implement EIP-7685, add support for block requests and extend prague block headers with ``requests_hash``. (`#2202 <https://github.com/ethereum/py-evm/issues/2202>`__)
+- Implement EIPs for Prague hard fork:
+
+    - EIP-7623: Increase calldata cost
+    - EIP-2935: Store historical block hashes in state
+    - EIP-7691: Blob throughput increase
+    - EIP-2537: Precompiles for BLS12-381 curve operations (`#2204 <https://github.com/ethereum/py-evm/issues/2204>`__)
+- Set fork-specific contracts if code at address not present + implement EIPs for Prague hard fork:
+
+    - EIP-6110: Validator deposit block requests
+    - EIP-7002: Withdrawal block requests
+    - EIP-7251: Consolidation block requests (`#2205 <https://github.com/ethereum/py-evm/issues/2205>`__)
+- Implement EIP-7702: Set code transaction (`#2206 <https://github.com/ethereum/py-evm/issues/2206>`__)
+
+
+Internal Changes - For py-evm Contributors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Update ``ethereum/tests`` test fixture and introduce ``fixtures_eest`` submodule for testing against the EEST test suite. (`#2208 <https://github.com/ethereum/py-evm/issues/2208>`__)
+
 
 py-evm v0.11.0-beta.1 (2025-02-18)
 ----------------------------------

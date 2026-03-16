@@ -38,6 +38,8 @@ class Message(MessageAPI):
         "should_transfer_value",
         "is_static",
         "_storage_address",
+        "_is_delegation",
+        "refund",
     ]
 
     logger = logging.getLogger("eth.vm.message.Message")
@@ -55,6 +57,8 @@ class Message(MessageAPI):
         code_address: Address = None,
         should_transfer_value: bool = True,
         is_static: bool = False,
+        is_delegation: bool = False,
+        refund: int = 0,
     ) -> None:
         validate_uint256(gas, title="Message.gas")
         self.gas: int = gas
@@ -95,6 +99,11 @@ class Message(MessageAPI):
         validate_is_boolean(is_static, title="Message.is_static")
         self.is_static = is_static
 
+        validate_is_boolean(is_delegation, title="Message.is_delegation")
+        self._is_delegation = is_delegation
+
+        self.refund = refund
+
     @property
     def code_address(self) -> Address:
         if self._code_address is not None:
@@ -124,3 +133,11 @@ class Message(MessageAPI):
     @property
     def data_as_bytes(self) -> bytes:
         return bytes(self.data)
+
+    @property
+    def is_delegation(self) -> bool:
+        return self._is_delegation
+
+    @is_delegation.setter
+    def is_delegation(self, value: bool) -> None:
+        self._is_delegation = value

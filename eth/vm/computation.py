@@ -151,6 +151,7 @@ class BaseComputation(ComputationAPI, Configurable):
         self._stack = Stack()
         self._memory = Memory()
         self._log_entries = []
+        self.data_floor_cost = 0
 
     def _configure_gas_meter(self) -> GasMeter:
         return GasMeter(self.msg.gas)
@@ -254,10 +255,13 @@ class BaseComputation(ComputationAPI, Configurable):
     # -- gas consumption -- #
     def get_gas_refund(self) -> int:
         if self.is_error:
-            return 0
+            # if computation is an error, return only the refund from message processing
+            return self.msg.refund
         else:
-            return self._gas_meter.gas_refunded + sum(
-                c.get_gas_refund() for c in self.children
+            return (
+                self.msg.refund
+                + self._gas_meter.gas_refunded
+                + sum(c.get_gas_refund() for c in self.children)
             )
 
     # -- account management -- #
@@ -378,7 +382,8 @@ class BaseComputation(ComputationAPI, Configurable):
             # Early exit on pre-compiles
             precompile = computation.precompiles.get(message.code_address, NO_RESULT)
             if precompile is not NO_RESULT:
-                precompile(computation)
+                if not message.is_delegation:
+                    precompile(computation)
                 return computation
 
             show_debug2 = computation.logger.show_debug2

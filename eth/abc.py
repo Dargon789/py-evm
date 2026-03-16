@@ -3,7 +3,6 @@ from abc import (
     abstractmethod,
 )
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
@@ -53,11 +52,6 @@ from eth.typing import (
     JournalDBCheckpoint,
     VMConfiguration,
 )
-
-if TYPE_CHECKING:
-    from eth.vm.forks.cancun.transactions import (
-        BlobTransaction,
-    )
 
 T = TypeVar("T")
 
@@ -409,6 +403,31 @@ class BaseTransactionAPI(ABC):
         ...
 
 
+class SetCodeAuthorizationAPI(ABC):
+    chain_id: int
+    address: Address
+    nonce: int
+    y_parity: int
+    r: int
+    s: int
+
+    @abstractmethod
+    def validate_for_transaction(self) -> None:
+        """
+        Validate authorization at the transaction level. This checks bounds on the
+        field types and, if any are invalid, will invalidate the whole transaction.
+        """
+        ...
+
+    @abstractmethod
+    def validate(self, chain_id: int) -> None:
+        """
+        Validate the authorization based on the EVM rules for EIP-7702. Failing this
+        check only invalidates the authorization, not the transaction.
+        """
+        ...
+
+
 class TransactionFieldsAPI(ABC):
     """
     A class to define all common transaction fields.
@@ -440,6 +459,30 @@ class TransactionFieldsAPI(ABC):
     def max_priority_fee_per_gas(self) -> int:
         """
         Will default to gas_price if this is a pre-1559 transaction.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def max_fee_per_blob_gas(self) -> int:
+        """
+        Will raise :class:`AttributeError` if get or set on a pre-blob transaction.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def blob_versioned_hashes(self) -> Sequence[Hash32]:
+        """
+        Will raise :class:`AttributeError` if get or set on a pre-blob transaction.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def authorization_list(self) -> Sequence[SetCodeAuthorizationAPI]:
+        """
+        A list of authorizations
         """
         ...
 
@@ -484,16 +527,6 @@ class TransactionFieldsAPI(ABC):
     @property
     @abstractmethod
     def chain_id(self) -> Optional[int]:
-        ...
-
-    @property
-    @abstractmethod
-    def max_fee_per_blob_gas(self) -> int:
-        ...
-
-    @property
-    @abstractmethod
-    def blob_versioned_hashes(self) -> Sequence[Hash32]:
         ...
 
 
@@ -843,6 +876,7 @@ class BlockAPI(ABC):
     transactions: Tuple[SignedTransactionAPI, ...]
     uncles: Tuple[BlockHeaderAPI, ...]
     withdrawals: Tuple[WithdrawalAPI, ...]
+    block_requests: List[bytes]
 
     transaction_builder: Type[TransactionBuilderAPI] = None
     receipt_builder: Type[ReceiptBuilderAPI] = None
@@ -1483,11 +1517,13 @@ class MessageAPI(ABC):
     depth: int
     gas: int
     is_static: bool
+    is_delegation: bool
     sender: Address
     should_transfer_value: bool
     _storage_address: Address
     to: Address
     value: int
+    refund: int
 
     __slots__ = [
         "code",
@@ -1497,10 +1533,12 @@ class MessageAPI(ABC):
         "depth",
         "gas",
         "is_static",
+        "is_delegation",
         "sender",
         "should_transfer_value",
         "_storage_address" "to",
         "value",
+        "refund",
     ]
 
     @property
@@ -1616,6 +1654,11 @@ class TransactionContextAPI(ABC):
         """
         Return the blob versioned hashes of the transaction context.
         """
+        ...
+
+    @property
+    @abstractmethod
+    def authorization_list(self) -> Sequence[SetCodeAuthorizationAPI]:
         ...
 
 
@@ -1994,6 +2037,7 @@ class ComputationAPI(
     accounts_to_delete: List[Address]
     beneficiaries: List[Address]
     contracts_created: List[Address] = []
+    data_floor_gas: int = 0
 
     _memory: MemoryAPI
     _stack: StackAPI
@@ -2885,15 +2929,6 @@ class TransactionExecutorAPI(ABC):
         """
         ...
 
-    # -- post-cancun -- #
-
-    @abstractmethod
-    def calc_data_fee(self, transaction: "BlobTransaction") -> int:
-        """
-        For Cancun and later, calculate the data fee for a transaction.
-        """
-        ...
-
 
 class ConfigurableAPI(ABC):
     """
@@ -3407,6 +3442,13 @@ class StateAPI(ConfigurableAPI):
         ...
 
     def apply_all_withdrawals(self, withdrawals: Sequence[WithdrawalAPI]) -> None:
+        ...
+
+    # set code authorizations
+    def process_set_code_authorizations(self, transaction: SignedTransactionAPI) -> int:
+        """
+        Process the given set code authorizations and return the message gas refund.
+        """
         ...
 
 

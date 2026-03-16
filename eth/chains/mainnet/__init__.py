@@ -26,6 +26,9 @@ from .constants import (
     SPURIOUS_DRAGON_MAINNET_BLOCK,
     DAO_FORK_MAINNET_EXTRA_DATA,
     DAO_FORK_MAINNET_BLOCK,
+    SHANGHAI_MAINNET_BLOCK,
+    CANCUN_MAINNET_BLOCK,
+    PRAGUE_MAINNET_BLOCK,
 )
 from eth import constants as eth_constants
 
@@ -50,6 +53,7 @@ from eth.vm.forks import (
     MuirGlacierVM,
     ParisVM,
     PetersburgVM,
+    PragueVM,
     ShanghaiVM,
     SpuriousDragonVM,
     TangerineWhistleVM,
@@ -110,6 +114,9 @@ MAINNET_FORK_BLOCKS = (
     ARROW_GLACIER_MAINNET_BLOCK,
     GRAY_GLACIER_MAINNET_BLOCK,
     PARIS_MAINNET_BLOCK,
+    SHANGHAI_MAINNET_BLOCK,
+    CANCUN_MAINNET_BLOCK,
+    PRAGUE_MAINNET_BLOCK,
 )
 MINING_MAINNET_VMS = (
     FrontierVM,
@@ -129,6 +136,7 @@ POS_MAINNET_VMS = (
     ParisVM,
     ShanghaiVM,
     CancunVM,
+    PragueVM,
 )
 
 MAINNET_VMS = MINING_MAINNET_VMS + POS_MAINNET_VMS
