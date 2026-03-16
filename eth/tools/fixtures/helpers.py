@@ -55,6 +55,7 @@ from eth.vm.forks import (
     LondonVM,
     ParisVM,
     PetersburgVM,
+    PragueVM,
     ShanghaiVM,
     SpuriousDragonVM,
     TangerineWhistleVM,
@@ -176,6 +177,8 @@ def chain_vm_configuration(
         return ((0, ShanghaiVM),)
     elif network == "Cancun":
         return ((0, CancunVM),)
+    elif network == "Prague":
+        return ((0, PragueVM),)
 
     # -- transitions -- #
 
@@ -225,6 +228,8 @@ def chain_vm_configuration(
         return transition_test_at_timestamp(fixture, ParisVM, ShanghaiVM, 15000)
     elif network == "ShanghaiToCancunAtTime15k":
         return transition_test_at_timestamp(fixture, ShanghaiVM, CancunVM, 15000)
+    elif network == "CancunToPragueAtTime15k":
+        return transition_test_at_timestamp(fixture, CancunVM, PragueVM, 15000)
     else:
         raise ValueError(f"Network {network} does not match any known VM rules")
 
@@ -253,6 +258,7 @@ NON_LEGACY_HEADER_FIELDS = {
     "blobGasUsed",
     "excessBlobGas",
     "parentBeaconBlockRoot",
+    "requestsHash",
 }
 KNOWN_HEADER_FIELDS = LEGACY_HEADER_FIELDS | NON_LEGACY_HEADER_FIELDS
 

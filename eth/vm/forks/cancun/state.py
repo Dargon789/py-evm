@@ -1,5 +1,6 @@
 from typing import (
     Any,
+    Optional,
     Tuple,
     Type,
     cast,
@@ -17,6 +18,9 @@ from eth_utils import (
 
 from eth._utils.address import (
     generate_contract_address,
+)
+from eth._utils.calculations import (
+    fake_exponential,
 )
 from eth.abc import (
     ComputationAPI,
@@ -51,6 +55,8 @@ from .computation import (
     CancunComputation,
 )
 from .constants import (
+    BEACON_ROOTS_ADDRESS,
+    BEACON_ROOTS_CONTRACT_CODE,
     BLOB_BASE_FEE_UPDATE_FRACTION,
     BLOB_TX_TYPE,
     GAS_PER_BLOB,
@@ -63,23 +69,6 @@ from .transaction_context import (
 from .transactions import (
     BlobTransaction,
 )
-
-
-# ``max_iterations`` was added to prevent the exponential nature from running
-# indefinitely. Some ``ethereum/tests`` would hang forever on this calculation. We
-# should keep an eye on this function to see if this value is accurate enough for
-# the use case.
-def fake_exponential(
-    factor: int, numerator: int, denominator: int, max_iterations: int = 10000
-) -> int:
-    i = 1
-    output = 0
-    numerator_accum = factor * denominator
-    while numerator_accum > 0 and i < max_iterations:
-        output += numerator_accum
-        numerator_accum = (numerator_accum * numerator) // (denominator * i)
-        i += 1
-    return output // denominator
 
 
 def get_total_blob_gas(transaction: TransactionFieldsAPI) -> int:
@@ -99,17 +88,21 @@ class CancunTransactionExecutor(ShanghaiTransactionExecutor):
         return get_total_blob_gas(transaction) * self.vm_state.blob_base_fee
 
     def build_evm_message(self, transaction: SignedTransactionAPI) -> MessageAPI:
+        # deduct from sender's balance
         london_gas_fee = transaction.gas * self.vm_state.get_gas_price(transaction)
-        cancun_data_fee = (
+        blob_data_fee = (
             self.calc_data_fee(cast(BlobTransaction, transaction))
             if transaction.type_id == BLOB_TX_TYPE
             else 0
         )
         self.vm_state.delta_balance(
-            transaction.sender, -1 * (london_gas_fee + cancun_data_fee)
+            transaction.sender, -1 * (london_gas_fee + blob_data_fee)
         )
 
+        # increment sender nonce
         self.vm_state.increment_nonce(transaction.sender)
+
+        msg_refund = self.calc_message_refund(transaction)
         message_gas = transaction.gas - transaction.intrinsic_gas
 
         if transaction.to == CREATE_CONTRACT_ADDRESS:
@@ -119,16 +112,20 @@ class CancunTransactionExecutor(ShanghaiTransactionExecutor):
             )
             data = b""
             code = transaction.data
+            is_delegation = False
         else:
             contract_address = None
             data = transaction.data
-            code = self.vm_state.get_code(transaction.to)
+            code, delegation_address = self.get_code_at_address(transaction.to)
+            is_delegation = delegation_address is not None
 
         self.vm_state.logger.debug2(
             f"TRANSACTION: {repr(transaction)}; "
             f"sender: {encode_hex(transaction.sender)} | "
             f"to: {encode_hex(transaction.to)} | "
-            f"data-hash: {encode_hex(keccak(transaction.data))}"
+            f"data-hash: {encode_hex(keccak(transaction.data))} | "
+            f"gas: {transaction.gas} | "
+            f"code: {encode_hex(code)} | "
         )
 
         message = Message(
@@ -139,8 +136,26 @@ class CancunTransactionExecutor(ShanghaiTransactionExecutor):
             data=data,
             code=code,
             create_address=contract_address,
+            refund=msg_refund,
+            is_delegation=is_delegation,
         )
         return message
+
+    def calc_message_refund(self, transaction: SignedTransactionAPI) -> int:
+        """
+        Calculate any initial refunds from message pre-processing. This becomes relevant
+        in Prague.
+        """
+        return 0
+
+    def get_code_at_address(
+        self, code_address: Address
+    ) -> Tuple[bytes, Optional[Address]]:
+        """
+        Return the code at the given address and a delegation address if the code is a
+        delegation designation. Returns ``None`` until Prague.
+        """
+        return self.vm_state.get_code(code_address), None
 
 
 class CancunState(ShanghaiState):
@@ -150,6 +165,11 @@ class CancunState(ShanghaiState):
 
     _transient_storage_class: Type[TransientStorageAPI] = TransientStorage
     _transient_storage: TransientStorageAPI = None
+
+    def set_system_contracts(self) -> None:
+        super().set_system_contracts()
+        if not self.get_code(BEACON_ROOTS_ADDRESS) != BEACON_ROOTS_CONTRACT_CODE:
+            self.set_code(BEACON_ROOTS_ADDRESS, BEACON_ROOTS_CONTRACT_CODE)
 
     @property
     def transient_storage(self) -> TransientStorageAPI:

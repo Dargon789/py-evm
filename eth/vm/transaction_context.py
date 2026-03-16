@@ -10,6 +10,7 @@ from eth_typing import (
 )
 
 from eth.abc import (
+    SetCodeAuthorizationAPI,
     TransactionContextAPI,
 )
 from eth.validation import (
@@ -26,6 +27,7 @@ class BaseTransactionContext(TransactionContextAPI):
         gas_price: int,
         origin: Address,
         blob_versioned_hashes: Optional[Sequence[Hash32]] = None,
+        authorization_list: Optional[Sequence[SetCodeAuthorizationAPI]] = None,
     ) -> None:
         validate_uint256(gas_price, title="TransactionContext.gas_price")
         self._gas_price = gas_price
@@ -35,6 +37,8 @@ class BaseTransactionContext(TransactionContextAPI):
 
         # post-cancun
         self._blob_versioned_hashes = blob_versioned_hashes or []
+        # post-prague
+        self._authorization_list = authorization_list or []
 
     def get_next_log_counter(self) -> int:
         return next(self._log_counter)
@@ -50,3 +54,7 @@ class BaseTransactionContext(TransactionContextAPI):
     @property
     def blob_versioned_hashes(self) -> Sequence[Hash32]:
         raise NotImplementedError("Not implemented until Cancun.")
+
+    @property
+    def authorization_list(self) -> Sequence[SetCodeAuthorizationAPI]:
+        raise NotImplementedError("Not implemented until Prague.")

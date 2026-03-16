@@ -301,9 +301,7 @@ class VM(Configurable, VirtualMachineAPI):
 
         return result_header, receipts_tuple, computations_tuple
 
-    #
     # Withdrawals
-    #
     def apply_withdrawal(
         self,
         withdrawal: WithdrawalAPI,
@@ -328,9 +326,13 @@ class VM(Configurable, VirtualMachineAPI):
             if self.state.account_is_empty(address):
                 self.state.delete_account(address)
 
-    #
+    # Block requests
+    @staticmethod
+    def compute_requests_hash(block: BlockAPI) -> BlockAPI:
+        # Prague and beyond
+        return block
+
     # Importing blocks
-    #
     def import_block(self, block: BlockAPI) -> BlockAndMetaWitness:
         if self.get_block().number != block.number:
             raise ValidationError(
@@ -381,7 +383,7 @@ class VM(Configurable, VirtualMachineAPI):
         )
 
         # apply any block-related state processing
-        self.block_preprocessing(self._state, block.header)
+        self.block_preprocessing(block)
 
         # run all of the transactions.
         new_header, receipts, _ = self.apply_all_transactions(
@@ -401,14 +403,21 @@ class VM(Configurable, VirtualMachineAPI):
             withdrawals=withdrawals,
         )
 
-        return self.mine_block(filled_block)
+        processed_block = self.block_postprocessing(filled_block)
+        return self.mine_block(processed_block)
 
-    @classmethod
-    def block_preprocessing(cls, state: StateAPI, header: BlockHeaderAPI) -> None:
+    def block_preprocessing(self, block: BlockAPI) -> None:
         """
         Process any state changes before processing a block. Pre-processing does not
         become relevant until the Cancun network upgrade.
         """
+
+    def block_postprocessing(self, block: BlockAPI) -> BlockAPI:
+        """
+        Process any changes after the block is filled. Post-processing does not become
+        relevant until the Prague network upgrade.
+        """
+        return block
 
     def mine_block(
         self, block: BlockAPI, *args: Any, **kwargs: Any
